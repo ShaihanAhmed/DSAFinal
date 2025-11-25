@@ -2,55 +2,36 @@
 #define AUTH_H
 
 #include <iostream>
-#include <cstring>
 #include <fstream>
+#include <string>
 #include <ctime>
+
 using namespace std;
 
-class Auth
-{
+class Auth {
 private:
-    // string path = "./users/";
-    // string ext = ".txt";
+    string lastUsername;  // store last signed-up or logged-in username
 
-    string filePath(string a, string b, string c);
+    string filePath(string path, string filename, string ext);
     bool compare(const string a, const string b);
-    bool ifExist(string fp);
-    bool isStrongPassword(const string b);
+    bool ifExist(const string fp);
+    bool isStrongPassword(const string pass);
     void enc(string &a);
     bool valiEm(const string a);
-    bool passVali(const string a, const string b , const string path);
+    bool passVali(const string a, const string b, const string path);
 
 public:
-    // void signup();
-    bool signup();
-    // void login();
-    bool login();
+    // bool signup();
+
+    bool signupGUI(const string &fn, const string &email, const string &passInput);
+    
+    // string login();
+    
+    string login(const string &fn, const string &passInput);
+
+    // getters for main.cpp
+    string getLastSignedUpUsername();
+    string getLastLoggedInUsername();
 };
 
 #endif
-
-//--------------------------------- fallback point -------------------------------
-
-// #ifndef AUTH_H
-// #define AUTH_H
-
-// #include <iostream>
-// #include <fstream>
-// #include <string>
-
-// class Auth {
-// private:
-//     std::string filePath(const std::string &path, const std::string &fn, const std::string &ext);
-
-// public:
-//     bool signup(const std::string &user, const std::string &pass);
-//     bool login(const std::string &user, const std::string &pass);
-
-//     void enc(std::string &a);
-
-//     bool signupCLI();
-//     bool loginCLI();
-// };
-
-// #endif

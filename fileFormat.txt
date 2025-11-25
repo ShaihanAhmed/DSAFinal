@@ -1,0 +1,7 @@
+name,passw,email
+personal highscore,total,win,loss
+number of powerup
+frList(each name seperated by | )
+reqList(each name seperated by | )
+themeId(seperated by | )
+SaveGame(thinking of imp it in a diff file only for game progress)
