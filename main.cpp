@@ -1,253 +1,77 @@
+#include <SFML/Graphics.hpp>
+#include <iostream>
+#include "Auth.h"
+#include "PlayerSys.h"
+#include "FriendReqALGO.h"
 
+using namespace sf;
+using namespace std;
 
-// //-----------------------------------------------------------------------
+int g_lastScore = 0;
+bool g_lastWin = false;
 
-// // #include <iostream>
-// // #include "Auth.h"
-// // #include <SFML/Graphics.hpp>
-// // #include <time.h>
-// // using namespace sf;
-// // using namespace std;
+// ---------- Helper Functions ----------
+void setPlaceholders(Text &usernameText, Text &emailText, Text &passwordText, const string &typedUsername, const string &typedEmail, const string &typedPassword)
+{
+    usernameText.setString(typedUsername.empty() ? "Enter username..." : typedUsername);
+    emailText.setString(typedEmail.empty() ? "Enter email..." : typedEmail);
+    passwordText.setString(typedPassword.empty() ? "Enter password..." : string(typedPassword.size(), '*'));
+}
 
-// // const int M = 25;
-// // const int N = 40;
-// // int grid[M][N] = {0};
-// // int ts = 18; // tile size
+// Draw popup box with close button
+void drawPopup(RenderWindow &window, RectangleShape &popupBox, Text &popupText, RectangleShape &closeBtn, Text &closeText)
+{
+    window.draw(popupBox);
+    window.draw(popupText);
+    window.draw(closeBtn);
+    window.draw(closeText);
+}
 
-// // struct Enemy {
-// //     int x, y, dx, dy;
-// //     Enemy() {
-// //         x = y = 300;
-// //         dx = 4 - rand() % 8;
-// //         dy = 4 - rand() % 8;
-// //     }
-// //     void move() {
-// //         x += dx;
-// //         if (grid[y/ts][x/ts] == 1) { dx = -dx; x += dx; }
+const int M = 25;
+const int N = 40;
+int grid[M][N] = {0};
+int ts = 18; // tile size
 
-// //         y += dy;
-// //         if (grid[y/ts][x/ts] == 1) { dy = -dy; y += dy; }
-// //     }
-// // };
+struct Enemy
+{
+    int x, y, dx, dy;
+    Enemy()
+    {
+        x = y = 300;
+        dx = 4 - rand() % 8;
+        dy = 4 - rand() % 8;
+    }
+    void move()
+    {
+        x += dx;
+        if (grid[y / ts][x / ts] == 1)
+        {
+            dx = -dx;
+            x += dx;
+        }
 
-// // void drop(int y, int x)
-// // {
-// //     if (grid[y][x] == 0) grid[y][x] = -1;
-// //     if (grid[y-1][x] == 0) drop(y-1, x);
-// //     if (grid[y+1][x] == 0) drop(y+1, x);
-// //     if (grid[y][x-1] == 0) drop(y, x-1);
-// //     if (grid[y][x+1] == 0) drop(y, x+1);
-// // }
+        y += dy;
+        if (grid[y / ts][x / ts] == 1)
+        {
+            dy = -dy;
+            y += dy;
+        }
+    }
+};
 
-// // void startGame()
-// // {
-// //     srand(time(0));
-
-// //     RenderWindow window(VideoMode(N * ts, M * ts), "Xonix Game!");
-// //     window.setFramerateLimit(60);
-
-// //     Texture t1, t2, t3;
-// //     t1.loadFromFile("images/tiles.png");
-// //     t2.loadFromFile("images/gameover.png");
-// //     t3.loadFromFile("images/enemy.png");
-
-// //     Sprite sTile(t1), sGameover(t2), sEnemy(t3);
-// //     sGameover.setPosition(100, 100);
-// //     sEnemy.setOrigin(20, 20);
-
-// //     int enemyCount = 4;
-// //     Enemy a[10];
-
-// //     bool Game = true;
-// //     int x = 0, y = 0, dx = 0, dy = 0;
-// //     float timer = 0, delay = 0.07;
-// //     Clock clock;
-
-// //     for (int i = 0; i < M; i++)
-// //         for (int j = 0; j < N; j++)
-// //             if (i == 0 || j == 0 || i == M - 1 || j == N - 1)
-// //                 grid[i][j] = 1;
-
-// //     while (window.isOpen())
-// //     {
-// //         float time = clock.getElapsedTime().asSeconds();
-// //         clock.restart();
-// //         timer += time;
-
-// //         Event e;
-// //         while (window.pollEvent(e))
-// //         {
-// //             if (e.type == Event::Closed)
-// //                 window.close();
-
-// //             if (e.type == Event::KeyPressed)
-// //                 if (e.key.code == Keyboard::Escape)
-// //                 {
-// //                     for (int i = 1; i < M - 1; i++)
-// //                         for (int j = 1; j < N - 1; j++)
-// //                             grid[i][j] = 0;
-
-// //                     x = 10;
-// //                     y = 0;
-// //                     Game = true;
-// //                 }
-// //         }
-
-// //         if (Keyboard::isKeyPressed(Keyboard::Left)) { dx = -1; dy = 0; }
-// //         if (Keyboard::isKeyPressed(Keyboard::Right)) { dx = 1; dy = 0; }
-// //         if (Keyboard::isKeyPressed(Keyboard::Up)) { dx = 0; dy = -1; }
-// //         if (Keyboard::isKeyPressed(Keyboard::Down)) { dx = 0; dy = 1; }
-
-// //         if (!Game) continue;
-
-// //         if (timer > delay)
-// //         {
-// //             x += dx;
-// //             y += dy;
-
-// //             if (x < 0) x = 0;
-// //             if (x > N - 1) x = N - 1;
-// //             if (y < 0) y = 0;
-// //             if (y > M - 1) y = M - 1;
-
-// //             if (grid[y][x] == 2) Game = false;
-// //             if (grid[y][x] == 0) grid[y][x] = 2;
-
-// //             timer = 0;
-// //         }
-
-// //         for (int i = 0; i < enemyCount; i++) a[i].move();
-
-// //         if (grid[y][x] == 1)
-// //         {
-// //             dx = dy = 0;
-
-// //             for (int i = 0; i < enemyCount; i++)
-// //                 drop(a[i].y / ts, a[i].x / ts);
-
-// //             for (int i = 0; i < M; i++)
-// //                 for (int j = 0; j < N; j++)
-// //                     if (grid[i][j] == -1) grid[i][j] = 0;
-// //                     else grid[i][j] = 1;
-// //         }
-
-// //         for (int i = 0; i < enemyCount; i++)
-// //             if (grid[a[i].y/ts][a[i].x/ts] == 2)
-// //                 Game = false;
-
-// //         window.clear();
-
-// //         for (int i = 0; i < M; i++)
-// //             for (int j = 0; j < N; j++)
-// //             {
-// //                 if (grid[i][j] == 0) continue;
-
-// //                 if (grid[i][j] == 1) sTile.setTextureRect(IntRect(0, 0, ts, ts));
-// //                 if (grid[i][j] == 2) sTile.setTextureRect(IntRect(54, 0, ts, ts));
-
-// //                 sTile.setPosition(j * ts, i * ts);
-// //                 window.draw(sTile);
-// //             }
-
-// //         sTile.setTextureRect(IntRect(36, 0, ts, ts));
-// //         sTile.setPosition(x * ts, y * ts);
-// //         window.draw(sTile);
-
-// //         sEnemy.rotate(10);
-// //         for (int i = 0; i < enemyCount; i++)
-// //         {
-// //             sEnemy.setPosition(a[i].x, a[i].y);
-// //             window.draw(sEnemy);
-// //         }
-
-// //         if (!Game) window.draw(sGameover);
-
-// //         window.display();
-// //     }
-// // }
-
-
-// // int main() {
-// //     Auth obj;
-// //     bool authenticated = false;
-
-// //     while (!authenticated) {
-// //         int choice;
-// //         cout << "\033[36m\n----- XONIX GAME LOGIN -----\033[0m\n"; // cyan
-// //         cout << "\033[32m1. Sign Up\033[0m\n";                     // green
-// //         cout << "\033[34m2. Login\033[0m\n";                       // blue
-// //         cout << "\033[31m3. Quit\033[0m\n";                        // red
-// //         cout << "\033[37mEnter choice: \033[0m";                   // white
-// //         cin >> choice;
-
-// //         if (choice == 1) {
-// //             authenticated = obj.signup();
-// //         }
-// //         else if (choice == 2) {
-// //             authenticated = obj.login();
-// //         }
-// //         else if (choice == 3) {
-// //             cout << "\033[31mExiting...\033[0m\n";
-// //             return 0;
-// //         }
-// //         else {
-// //             cout << "\033[31mInvalid choice! Try again.\033[0m\n";
-// //         }
-// //     }
-
-// //     cout << "\033[32m\nAuthentication successful! Starting game...\033[0m\n";
-
-// //     startGame();
-
-// //     return 0;
-// // }
-
-// // ---------------------------------------------------------------
-// // ---------------------------------------------------------------
-// // ---------------------------------------------------------------
-// // ---------------------------------------------------------------
-// // ---------------------------------------------------------------
-
-
-// #include <iostream>
-// #include "Auth.h"
-// #include <SFML/Graphics.hpp>
-// #include <time.h>
-// #include "Player.h"
-// #include "PlayerSys.h"
-// #include "FriendReqALGO.h"
-// using namespace sf;
-// using namespace std;
-
-// const int M = 25;
-// const int N = 40;
-// int grid[M][N] = {0};
-// int ts = 18; // tile size
-
-// struct Enemy {
-//     int x, y, dx, dy;
-//     Enemy() {
-//         x = y = 300;
-//         dx = 4 - rand() % 8;
-//         dy = 4 - rand() % 8;
-//     }
-//     void move() {
-//         x += dx;
-//         if (grid[y/ts][x/ts] == 1) { dx = -dx; x += dx; }
-
-//         y += dy;
-//         if (grid[y/ts][x/ts] == 1) { dy = -dy; y += dy; }
-//     }
-// };
-
-// void drop(int y, int x)
-// {
-//     if (grid[y][x] == 0) grid[y][x] = -1;
-//     if (grid[y-1][x] == 0) drop(y-1, x);
-//     if (grid[y+1][x] == 0) drop(y+1, x);
-//     if (grid[y][x-1] == 0) drop(y, x-1);
-//     if (grid[y][x+1] == 0) drop(y, x+1);
-// }
+void drop(int y, int x)
+{
+    if (grid[y][x] == 0)
+        grid[y][x] = -1;
+    if (grid[y - 1][x] == 0)
+        drop(y - 1, x);
+    if (grid[y + 1][x] == 0)
+        drop(y + 1, x);
+    if (grid[y][x - 1] == 0)
+        drop(y, x - 1);
+    if (grid[y][x + 1] == 0)
+        drop(y, x + 1);
+}
 
 // void startGame()
 // {
@@ -303,30 +127,54 @@
 //                 }
 //         }
 
-//         if (Keyboard::isKeyPressed(Keyboard::Left)) { dx = -1; dy = 0; }
-//         if (Keyboard::isKeyPressed(Keyboard::Right)) { dx = 1; dy = 0; }
-//         if (Keyboard::isKeyPressed(Keyboard::Up)) { dx = 0; dy = -1; }
-//         if (Keyboard::isKeyPressed(Keyboard::Down)) { dx = 0; dy = 1; }
+//         if (Keyboard::isKeyPressed(Keyboard::Left))
+//         {
+//             dx = -1;
+//             dy = 0;
+//         }
+//         if (Keyboard::isKeyPressed(Keyboard::Right))
+//         {
+//             dx = 1;
+//             dy = 0;
+//         }
+//         if (Keyboard::isKeyPressed(Keyboard::Up))
+//         {
+//             dx = 0;
+//             dy = -1;
+//         }
+//         if (Keyboard::isKeyPressed(Keyboard::Down))
+//         {
+//             dx = 0;
+//             dy = 1;
+//         }
 
-//         if (!Game) continue;
+//         if (!Game)
+//             continue;
 
 //         if (timer > delay)
 //         {
 //             x += dx;
 //             y += dy;
 
-//             if (x < 0) x = 0;
-//             if (x > N - 1) x = N - 1;
-//             if (y < 0) y = 0;
-//             if (y > M - 1) y = M - 1;
+//             if (x < 0)
+//                 x = 0;
+//             if (x > N - 1)
+//                 x = N - 1;
+//             if (y < 0)
+//                 y = 0;
+//             if (y > M - 1)
+//                 y = M - 1;
 
-//             if (grid[y][x] == 2) Game = false;
-//             if (grid[y][x] == 0) grid[y][x] = 2;
+//             if (grid[y][x] == 2)
+//                 Game = false;
+//             if (grid[y][x] == 0)
+//                 grid[y][x] = 2;
 
 //             timer = 0;
 //         }
 
-//         for (int i = 0; i < enemyCount; i++) a[i].move();
+//         for (int i = 0; i < enemyCount; i++)
+//             a[i].move();
 
 //         if (grid[y][x] == 1)
 //         {
@@ -337,12 +185,14 @@
 
 //             for (int i = 0; i < M; i++)
 //                 for (int j = 0; j < N; j++)
-//                     if (grid[i][j] == -1) grid[i][j] = 0;
-//                     else grid[i][j] = 1;
+//                     if (grid[i][j] == -1)
+//                         grid[i][j] = 0;
+//                     else
+//                         grid[i][j] = 1;
 //         }
 
 //         for (int i = 0; i < enemyCount; i++)
-//             if (grid[a[i].y/ts][a[i].x/ts] == 2)
+//             if (grid[a[i].y / ts][a[i].x / ts] == 2)
 //                 Game = false;
 
 //         window.clear();
@@ -350,10 +200,13 @@
 //         for (int i = 0; i < M; i++)
 //             for (int j = 0; j < N; j++)
 //             {
-//                 if (grid[i][j] == 0) continue;
+//                 if (grid[i][j] == 0)
+//                     continue;
 
-//                 if (grid[i][j] == 1) sTile.setTextureRect(IntRect(0, 0, ts, ts));
-//                 if (grid[i][j] == 2) sTile.setTextureRect(IntRect(54, 0, ts, ts));
+//                 if (grid[i][j] == 1)
+//                     sTile.setTextureRect(IntRect(0, 0, ts, ts));
+//                 if (grid[i][j] == 2)
+//                     sTile.setTextureRect(IntRect(54, 0, ts, ts));
 
 //                 sTile.setPosition(j * ts, i * ts);
 //                 window.draw(sTile);
@@ -370,389 +223,252 @@
 //             window.draw(sEnemy);
 //         }
 
-//         if (!Game) window.draw(sGameover);
+//         if (!Game)
+//             window.draw(sGameover);
 
 //         window.display();
 //     }
 // }
 
+// aqsa's imp for strt game ----------------------------------------------
+// void startGame()
+// {
+//     int tilesCaptured = 0;
+//     int score = 0;
+//     int bonusCount = 0;
+//     srand(time(0));
 
-// // ... your other includes and startGame() ...
+//     RenderWindow window(VideoMode(N * ts, M * ts), "Xonix Game!");
+//     window.setFramerateLimit(60);
 
-// // int main() {
-// //     Auth obj;
-// //     Player currentPlayer;   // create player object
-// //     bool authenticated = false;
-    
-// //     string currentUsername = "";
+//     Texture t1, t2, t3;
+//     t1.loadFromFile("images/tiles.png");
+//     t2.loadFromFile("images/gameover.png");
+//     t3.loadFromFile("images/enemy.png");
 
-// // while (currentUsername.empty()) {
-// //     int choice;
-// //     cout << "\033[36m\n----- XONIX GAME LOGIN -----\033[0m\n";
-// //     cout << "\033[32m1. Sign Up\033[0m\n";
-// //     cout << "\033[34m2. Login\033[0m\n";
-// //     cout << "\033[31m3. Quit\033[0m\n";
-// //     cout << "\033[37mEnter choice: \033[0m";
-// //     cin >> choice;
-// //     cin.ignore();
+//     Sprite sTile(t1), sGameover(t2), sEnemy(t3);
+//     sGameover.setPosition(100, 100);
+//     sEnemy.setOrigin(20, 20);
 
-// //     if (choice == 1) {
-// //         bool signupSuccess = obj.signup();
-// //         if (signupSuccess) {
-// //             currentUsername = obj.getLastSignedUpUsername(); // implement this in Auth
-// //         }
-// //     }
-// //     else if (choice == 2) {
-// //         currentUsername = obj.login(); // now login returns username
-// //     }
-// //     else if (choice == 3) {
-// //         cout << "\033[31mExiting...\033[0m\n";
-// //         return 0;
-// //     }
-// //     else {
-// //         cout << "\033[31mInvalid choice! Try again.\033[0m\n";
-// //     }
-// // }
+//     int enemyCount = 4;
+//     Enemy a[10];
 
+//     bool Game = true;
+//     int x = 0, y = 0, dx = 0, dy = 0;
+//     float timer = 0, delay = 0.07;
+//     Clock clock;
 
-// //     // ------------------- LOAD PLAYER DATA -------------------
-// //     string filepath = "./users/" + currentUsername + ".txt";
-// //     currentPlayer.loadFromFile(filepath);
+//     for (int i = 0; i < M; i++)
+//         for (int j = 0; j < N; j++)
+//             if (i == 0 || j == 0 || i == M - 1 || j == N - 1)
+//                 grid[i][j] = 1;
 
-// //     // ------------------- DEBUG: PRINT FRIENDS -------------------
-// //     cout << "\n--- FRIENDS ---\n";
-// //     FriendNode* f = currentPlayer.friendsHead;
-// //     if (!f) cout << "No friends yet.\n";
-// //     while (f) {
-// //         cout << f->name << "\n";
-// //         f = f->next;
-// //     }
+//     // ---------- GUI Text for Score ----------
+//     Font font;
+//     if (!font.loadFromFile("fonts/arial.ttf"))
+//     {
+//         cout << "Font not found!\n";
+//         return;
+//     }
+//     Text scoreText("", font, 24);
+//     scoreText.setFillColor(Color::Yellow);
+//     scoreText.setPosition(10, 10);
 
-// //     // ------------------- DEBUG: PRINT REQUESTS -------------------
-// //     cout << "\n--- REQUESTS ---\n";
-// //     RequestNode* r = currentPlayer.requestsHead;
-// //     if (!r) cout << "No friend requests yet.\n";
-// //     while (r) {
-// //         cout << r->name << "\n";
-// //         r = r->next;
-// //     }
+//     Text bonusText("", font, 20);
+//     bonusText.setFillColor(Color::Cyan);
+//     bonusText.setPosition(10, 40);
 
-// //     cout << "\033[32m\nStarting game...\033[0m\n";
-// //     startGame();
+//     while (window.isOpen())
+//     {
+//         float time = clock.getElapsedTime().asSeconds();
+//         clock.restart();
+//         timer += time;
 
-// //     return 0;
-// // }
+//         Event e;
+//         while (window.pollEvent(e))
+//         {
+//             if (e.type == Event::Closed)
+//                 window.close();
 
-// // --------------------------------------------------------------------
-// // --------------------------------------------------------------------
-// // ---------------------------- imp loding data into arr -----------------------
-// // --------------------------------------------------------------------
-// // ---------------------------------------------------------------------
+//             if (e.type == Event::KeyPressed)
+//                 if (e.key.code == Keyboard::Escape)
+//                 {
+//                     for (int i = 1; i < M - 1; i++)
+//                         for (int j = 1; j < N - 1; j++)
+//                             grid[i][j] = 0;
 
-// void displayPlayer(const Player &p) {
-//     cout << "Username: " << p.getName() << endl;
-//     cout << "Email   : " << p.getEmail() << endl;
-//     cout << "Password: " << p.getPass() << endl;
-//     cout << "Total   : " << p.total 
-//          << " Wins=" << p.wins 
-//          << " Losses=" << p.losses << endl;
-//     cout << "ThemeID : " << p.themeID << endl;
+//                     x = 10;
+//                     y = 0;
+//                     Game = true;
+//                     score = 0;
+//                     bonusCount = 0;
+//                 }
+//         }
 
-//     cout << "Friends : ";
-//     for (FriendNode *f = p.friendsHead; f; f = f->next)
-//         cout << f->name << " ";
-//     cout << endl;
+//         if (Keyboard::isKeyPressed(Keyboard::Left))
+//         {
+//             dx = -1;
+//             dy = 0;
+//         }
+//         if (Keyboard::isKeyPressed(Keyboard::Right))
+//         {
+//             dx = 1;
+//             dy = 0;
+//         }
+//         if (Keyboard::isKeyPressed(Keyboard::Up))
+//         {
+//             dx = 0;
+//             dy = -1;
+//         }
+//         if (Keyboard::isKeyPressed(Keyboard::Down))
+//         {
+//             dx = 0;
+//             dy = 1;
+//         }
 
-//     cout << "Requests: ";
-//     for (RequestNode *r = p.requestsHead; r; r = r->next)
-//         cout << r->name << " ";
-//     cout << endl;
-//     cout << "----------------------\n";
+//         if (!Game)
+//             continue;
+
+//         if (timer > delay)
+//         {
+//             x += dx;
+//             y += dy;
+
+//             if (x < 0)
+//                 x = 0;
+//             if (x > N - 1)
+//                 x = N - 1;
+//             if (y < 0)
+//                 y = 0;
+//             if (y > M - 1)
+//                 y = M - 1;
+
+//             if (grid[y][x] == 2)
+//                 Game = false;
+//             if (grid[y][x] == 0)
+//                 grid[y][x] = 2;
+
+//             timer = 0;
+//         }
+
+//         for (int i = 0; i < enemyCount; i++)
+//             a[i].move();
+
+//         if (grid[y][x] == 1)
+//         {
+//             tilesCaptured = 0;
+//             dx = dy = 0;
+
+//             for (int i = 0; i < enemyCount; i++)
+//                 drop(a[i].y / ts, a[i].x / ts);
+
+//             for (int i = 0; i < M; i++)
+//                 for (int j = 0; j < N; j++)
+//                     if (grid[i][j] == -1)
+//                         grid[i][j] = 0;
+//                     else if (grid[i][j] == 0 || grid[i][j] == 2)
+//                     {
+//                         grid[i][j] = 1;
+//                         tilesCaptured++;
+//                     }
+
+//             int threshold;
+//             int multiplier;
+
+//             if (bonusCount <= 2)
+//                 threshold = 10;
+//             else
+//                 threshold = 5;
+
+//             if (bonusCount > 5)
+//                 multiplier = 4;
+//             else
+//                 multiplier = 2;
+
+//             if (tilesCaptured > threshold)
+//             {
+//                 score += tilesCaptured * multiplier;
+//                 bonusCount++;
+//             }
+//             else if (tilesCaptured > 0)
+//             {
+//                 score += tilesCaptured;
+//             }
+//         }
+
+//         for (int i = 0; i < enemyCount; i++)
+//             if (grid[a[i].y / ts][a[i].x / ts] == 2)
+//                 Game = false;
+
+//         // Update score GUI text
+//         scoreText.setString("Score: " + to_string(score));
+//         bonusText.setString("Bonus: " + to_string(bonusCount));
+
+//         window.clear();
+
+//         for (int i = 0; i < M; i++)
+//             for (int j = 0; j < N; j++)
+//             {
+//                 if (grid[i][j] == 0)
+//                     continue;
+
+//                 if (grid[i][j] == 1)
+//                     sTile.setTextureRect(IntRect(0, 0, ts, ts));
+//                 if (grid[i][j] == 2)
+//                     sTile.setTextureRect(IntRect(54, 0, ts, ts));
+
+//                 sTile.setPosition(j * ts, i * ts);
+//                 window.draw(sTile);
+//             }
+
+//         sTile.setTextureRect(IntRect(36, 0, ts, ts));
+//         sTile.setPosition(x * ts, y * ts);
+//         window.draw(sTile);
+
+//         sEnemy.rotate(10);
+//         for (int i = 0; i < enemyCount; i++)
+//         {
+//             sEnemy.setPosition(a[i].x, a[i].y);
+//             window.draw(sEnemy);
+//         }
+
+//         window.draw(scoreText);
+//         window.draw(bonusText);
+
+//         if (!Game)
+//             window.draw(sGameover);
+
+//         window.display();
+//     }
+
 // }
 
-// // int main() {
-// //     Auth auth;
-// //     PlayerSys sys;
-// //     Player currentPlayer;
+// imp for storing total points ------------------------------------------------
+// imp for storing total points ------------------------------------------------
+// imp for storing total points ------------------------------------------------
 
-// //     // ---------------- Load all users at startup ----------------
-// //     sys.loadAllPlayers();
-// //     cout << "\nLoaded " << sys.count << " user(s) from ./users folder.\n";
-
-// //     // ---------------- Debug: Display all loaded users ----------------
-// //     cout << "\n--- Loaded users (DEBUG) ---\n";
-// //     for (int i = 0; i < sys.count; i++)
-// //         displayPlayer(sys.players[i]);
-
-// //     // ---------------- ALSO DEBUG HASH TABLE LOOKUP ----------------
-// //     cout << "\n--- Hash Search Test (DEBUG) ---\n";
-// //     cout << "Search username: ";
-// //     string testname;
-// //     cin >> testname;
-
-// //     int testIndex = sys.findPlayer(testname);
-// //     if (testIndex == -1)
-// //         cout << "User NOT FOUND in hash table.\n";
-// //     else {
-// //         cout << "Found at index " << testIndex << " in players[].\n";
-// //         displayPlayer(sys.players[testIndex]);
-// //     }
-
-// //     cin.ignore(); // clean leftover newline
-
-// //     // ---------------- Login / Signup Logic ----------------
-// //     string currentUsername = "";
-
-// //     while (currentUsername.empty()) {
-// //         int choice;
-// //         cout << "\033[36m\n----- XONIX GAME LOGIN -----\033[0m\n";
-// //         cout << "\033[32m1. Sign Up\033[0m\n";
-// //         cout << "\033[34m2. Login\033[0m\n";
-// //         cout << "\033[31m3. Quit\033[0m\n";
-// //         cout << "Enter choice: ";
-// //         cin >> choice;
-// //         cin.ignore();
-
-// //         if (choice == 1) {
-// //             bool ok = auth.signup();
-// //             if (ok) {
-// //                 currentUsername = auth.getLastSignedUpUsername();
-
-// //                 // Load NEW user from file
-// //                 Player newP;
-// //                 newP.loadFromFile("./users/" + currentUsername + ".txt");
-
-// //                 // Add to the array AND hash table
-// //                 sys.addPlayer(newP);
-
-// //                 cout << "\n\033[32m(New user saved + added to array)\033[0m\n";
-// //             }
-// //         }
-// //         else if (choice == 2) {
-// //             currentUsername = auth.login();
-// //             if (currentUsername.empty())
-// //                 cout << "\033[31mLogin failed. Try again.\033[0m\n";
-// //         }
-// //         else if (choice == 3) {
-// //             cout << "Goodbye!\n";
-// //             return 0;
-// //         }
-// //         else {
-// //             cout << "Invalid option! Try again.\n";
-// //         }
-// //     }
-
-// //     // ---------------- Load logged-in player ----------------
-// //     currentPlayer.loadFromFile("./users/" + currentUsername + ".txt");
-
-// //     cout << "\n\033[33m--- Current Player Data (DEBUG) ---\033[0m\n";
-// //     displayPlayer(currentPlayer);
-
-// //     // ---------------- START THE GAME ----------------
-// //     cout << "\033[32m\nStarting game...\033[0m\n";
-// //     startGame();     // your actual game function
-
-// //     return 0;
-// // }
-
-// // --------------------------------------------------------------------------------
-// // int main() {
-// //     Auth auth;
-// //     PlayerSys sys;
-// //     Player currentPlayer;
-
-// //     // ---------------- Load all users at startup ----------------
-// //     sys.loadAllPlayers();
-// //     cout << "\nLoaded " << sys.count << " user(s) from ./users folder.\n";
-
-// //     // ---------------- Debug: Display all loaded users ----------------
-// //     cout << "\n--- Loaded users (DEBUG) ---\n";
-// //     for (int i = 0; i < sys.count; i++)
-// //         displayPlayer(sys.players[i]);
-
-// //     // ---------------- Login / Signup Logic ----------------
-// //     string currentUsername = "";
-// //     while (currentUsername.empty()) {
-// //         int choice;
-// //         cout << "\033[36m\n----- XONIX GAME LOGIN -----\033[0m\n";
-// //         cout << "\033[32m1. Sign Up\033[0m\n";
-// //         cout << "\033[34m2. Login\033[0m\n";
-// //         cout << "\033[31m3. Quit\033[0m\n";
-// //         cout << "Enter choice: ";
-// //         cin >> choice;
-// //         cin.ignore();
-
-// //         if (choice == 1) {
-// //             bool ok = auth.signup();
-// //             if (ok) {
-// //                 currentUsername = auth.getLastSignedUpUsername();
-
-// //                 // Load NEW user from file
-// //                 Player newP;
-// //                 newP.loadFromFile("./users/" + currentUsername + ".txt");
-
-// //                 // Add to the array
-// //                 sys.addPlayer(newP);
-
-// //                 cout << "\n\033[32m(New user saved + added to array)\033[0m\n";
-// //             }
-// //         }
-// //         else if (choice == 2) {
-// //             currentUsername = auth.login();
-// //             if (currentUsername.empty())
-// //                 cout << "\033[31mLogin failed. Try again.\033[0m\n";
-// //         }
-// //         else if (choice == 3) {
-// //             cout << "Goodbye!\n";
-// //             return 0;
-// //         }
-// //         else {
-// //             cout << "Invalid option! Try again.\n";
-// //         }
-// //     }
-
-// //     // ---------------- Load logged-in player ----------------
-// //     currentPlayer.loadFromFile("./users/" + currentUsername + ".txt");
-
-// //     cout << "\n\033[33m--- Current Player Data (DEBUG) ---\033[0m\n";
-// //     displayPlayer(currentPlayer);
-
-// //     // ---------------- Initialize FriendReqAlgo ----------------
-// //     HashingALGO ht;
-// //     for (int i = 0; i < sys.count; i++)
-// //         ht.insert(sys.players[i].getName(), i);
-// //     FriendReqAlgo freqs(&sys, &ht);
-
-// //     // ---------------- Post-login Menu ----------------
-// //     int menuChoice = 0;
-// //     do {
-// //         cout << "\n\033[36m----- FRIEND MENU -----\033[0m\n";
-// //         cout << "1. View Friends\n";
-// //         cout << "2. View Pending Requests\n";
-// //         cout << "3. Send Friend Request\n";
-// //         cout << "4. Accept Friend Request\n";
-// //         cout << "5. Reject Friend Request\n";
-// //         cout << "6. Start Game\n";
-// //         cout << "7. Logout / Quit\n";
-// //         cout << "Enter choice: ";
-// //         cin >> menuChoice;
-// //         cin.ignore();
-
-// //         switch (menuChoice) {
-// //             case 1:
-// //                 freqs.viewFriends(currentUsername);
-// //                 break;
-
-// //             case 2:
-// //                 freqs.viewRequests(currentUsername);
-// //                 break;
-
-// //             case 3: {
-// //                 string toUser;
-// //                 cout << "Enter username to send request to: ";
-// //                 getline(cin, toUser);
-// //                 freqs.sendReq(currentUsername, toUser);
-
-// //                 // Save the updated request immediately
-// //                 int idx = sys.findPlayer(toUser);
-// //                 if (idx != -1)
-// //                     sys.players[idx].saveToFile("./users/" + sys.players[idx].getName() + ".txt");
-// //                 break;
-// //             }
-
-// //             case 4: {
-// //                 string fromUser;
-// //                 cout << "Enter username of request to accept: ";
-// //                 getline(cin, fromUser);
-// //                 freqs.acceptReq(currentUsername, fromUser);
-
-// //                 // Save both users immediately
-// //                 int uIdx = sys.findPlayer(currentUsername);
-// //                 int fIdx = sys.findPlayer(fromUser);
-// //                 if (uIdx != -1)
-// //                     sys.players[uIdx].saveToFile("./users/" + sys.players[uIdx].getName() + ".txt");
-// //                 if (fIdx != -1)
-// //                     sys.players[fIdx].saveToFile("./users/" + sys.players[fIdx].getName() + ".txt");
-// //                 break;
-// //             }
-
-// //             case 5: {
-// //                 string fromUser;
-// //                 cout << "Enter username of request to reject: ";
-// //                 getline(cin, fromUser);
-// //                 freqs.rejectReq(currentUsername, fromUser);
-
-// //                 // Save current player immediately
-// //                 int uIdx = sys.findPlayer(currentUsername);
-// //                 if (uIdx != -1)
-// //                     sys.players[uIdx].saveToFile("./users/" + sys.players[uIdx].getName() + ".txt");
-// //                 break;
-// //             }
-
-// //             case 6:
-// //                 cout << "\033[32m\nStarting game...\033[0m\n";
-// //                 startGame();
-// //                 break;
-
-// //             case 7:
-// //                 cout << "Logging out...\n";
-// //                 break;
-
-// //             default:
-// //                 cout << "Invalid choice! Try again.\n";
-// //         }
-
-// //     } while (menuChoice != 7);
-
-// //     return 0;
-// // }
-
-// // gui imp --------------------------------
-// // gui imp --------------------------------
-// // gui imp --------------------------------
-// // gui imp --------------------------------
-#include <SFML/Graphics.hpp>
-#include <iostream>
-#include "Auth.h"
-#include "PlayerSys.h"
-#include "FriendReqALGO.h"
-
-using namespace sf;
-using namespace std;
-
-
-const int M = 25;
-const int N = 40;
-int grid[M][N] = {0};
-int ts = 18; // tile size
-
-struct Enemy {
-    int x, y, dx, dy;
-    Enemy() {
-        x = y = 300;
-        dx = 4 - rand() % 8;
-        dy = 4 - rand() % 8;
-    }
-    void move() {
-        x += dx;
-        if (grid[y/ts][x/ts] == 1) { dx = -dx; x += dx; }
-
-        y += dy;
-        if (grid[y/ts][x/ts] == 1) { dy = -dy; y += dy; }
-    }
-};
-
-void drop(int y, int x)
+void resetGameState(int &x, int &y, int &dx, int &dy, int grid[M][N], Enemy a[], int enemyCount)
 {
-    if (grid[y][x] == 0) grid[y][x] = -1;
-    if (grid[y-1][x] == 0) drop(y-1, x);
-    if (grid[y+1][x] == 0) drop(y+1, x);
-    if (grid[y][x-1] == 0) drop(y, x-1);
-    if (grid[y][x+1] == 0) drop(y, x+1);
+    // Reset player position
+    x = 0;
+    y = 0;
+    dx = dy = 0;
+
+    // Reset grid
+    for (int i = 0; i < M; i++)
+        for (int j = 0; j < N; j++)
+            grid[i][j] = (i == 0 || j == 0 || i == M - 1 || j == N - 1) ? 1 : 0;
+
+    // Reset enemies
+    for (int i = 0; i < enemyCount; i++)
+        a[i] = Enemy(); // reinitialize enemy positions
 }
 
-void startGame()
+int startGame()
 {
+    int tilesCaptured = 0;
+    int score = 0;
+    int bonusCount = 0;
     srand(time(0));
 
     RenderWindow window(VideoMode(N * ts, M * ts), "Xonix Game!");
@@ -775,10 +491,27 @@ void startGame()
     float timer = 0, delay = 0.07;
     Clock clock;
 
+    resetGameState(x, y, dx, dy, grid, a, enemyCount);
+
     for (int i = 0; i < M; i++)
         for (int j = 0; j < N; j++)
             if (i == 0 || j == 0 || i == M - 1 || j == N - 1)
                 grid[i][j] = 1;
+
+    Font font;
+    if (!font.loadFromFile("fonts/arial.ttf"))
+    {
+        cout << "Font not found!\n";
+        return 0;
+    }
+
+    Text scoreText("", font, 24);
+    scoreText.setFillColor(Color::Yellow);
+    scoreText.setPosition(10, 10);
+
+    Text bonusText("", font, 20);
+    bonusText.setFillColor(Color::Cyan);
+    bonusText.setPosition(10, 40);
 
     while (window.isOpen())
     {
@@ -792,46 +525,76 @@ void startGame()
             if (e.type == Event::Closed)
                 window.close();
 
-            if (e.type == Event::KeyPressed)
-                if (e.key.code == Keyboard::Escape)
-                {
-                    for (int i = 1; i < M - 1; i++)
-                        for (int j = 1; j < N - 1; j++)
-                            grid[i][j] = 0;
+            if (e.type == Event::KeyPressed && e.key.code == Keyboard::Escape)
+            {
+                for (int i = 1; i < M - 1; i++)
+                    for (int j = 1; j < N - 1; j++)
+                        grid[i][j] = 0;
 
-                    x = 10;
-                    y = 0;
-                    Game = true;
-                }
+                x = 10;
+                y = 0;
+                Game = true;
+                score = 0;
+                bonusCount = 0;
+            }
         }
 
-        if (Keyboard::isKeyPressed(Keyboard::Left)) { dx = -1; dy = 0; }
-        if (Keyboard::isKeyPressed(Keyboard::Right)) { dx = 1; dy = 0; }
-        if (Keyboard::isKeyPressed(Keyboard::Up)) { dx = 0; dy = -1; }
-        if (Keyboard::isKeyPressed(Keyboard::Down)) { dx = 0; dy = 1; }
+        if (Keyboard::isKeyPressed(Keyboard::Left))
+        {
+            dx = -1;
+            dy = 0;
+        }
+        if (Keyboard::isKeyPressed(Keyboard::Right))
+        {
+            dx = 1;
+            dy = 0;
+        }
+        if (Keyboard::isKeyPressed(Keyboard::Up))
+        {
+            dx = 0;
+            dy = -1;
+        }
+        if (Keyboard::isKeyPressed(Keyboard::Down))
+        {
+            dx = 0;
+            dy = 1;
+        }
 
-        if (!Game) continue;
+        if (!Game)
+        {
+            window.draw(sGameover);
+            window.display();
+            break; // exit loop on death
+        }
 
         if (timer > delay)
         {
             x += dx;
             y += dy;
 
-            if (x < 0) x = 0;
-            if (x > N - 1) x = N - 1;
-            if (y < 0) y = 0;
-            if (y > M - 1) y = M - 1;
+            if (x < 0)
+                x = 0;
+            if (x > N - 1)
+                x = N - 1;
+            if (y < 0)
+                y = 0;
+            if (y > M - 1)
+                y = M - 1;
 
-            if (grid[y][x] == 2) Game = false;
-            if (grid[y][x] == 0) grid[y][x] = 2;
+            if (grid[y][x] == 2)
+                Game = false;
+            if (grid[y][x] == 0)
+                grid[y][x] = 2;
 
             timer = 0;
         }
 
-        for (int i = 0; i < enemyCount; i++) a[i].move();
+        for (int i = 0; i < enemyCount; i++)
+            a[i].move();
 
         if (grid[y][x] == 1)
         {
+            tilesCaptured = 0;
             dx = dy = 0;
 
             for (int i = 0; i < enemyCount; i++)
@@ -839,24 +602,44 @@ void startGame()
 
             for (int i = 0; i < M; i++)
                 for (int j = 0; j < N; j++)
-                    if (grid[i][j] == -1) grid[i][j] = 0;
-                    else grid[i][j] = 1;
+                {
+                    if (grid[i][j] == -1)
+                        grid[i][j] = 0;
+                    else if (grid[i][j] == 0 || grid[i][j] == 2)
+                    {
+                        grid[i][j] = 1;
+                        tilesCaptured++;
+                    }
+                }
+
+            int threshold = (bonusCount <= 2) ? 10 : 5;
+            int multiplier = (bonusCount > 5) ? 4 : 2;
+
+            if (tilesCaptured > threshold)
+            {
+                score += tilesCaptured * multiplier;
+                bonusCount++;
+            }
+            else if (tilesCaptured > 0)
+            {
+                score += tilesCaptured;
+            }
         }
 
         for (int i = 0; i < enemyCount; i++)
-            if (grid[a[i].y/ts][a[i].x/ts] == 2)
+            if (grid[a[i].y / ts][a[i].x / ts] == 2)
                 Game = false;
 
-        window.clear();
+        scoreText.setString("Score: " + to_string(score));
+        bonusText.setString("Bonus: " + to_string(bonusCount));
 
+        window.clear();
         for (int i = 0; i < M; i++)
             for (int j = 0; j < N; j++)
             {
-                if (grid[i][j] == 0) continue;
-
-                if (grid[i][j] == 1) sTile.setTextureRect(IntRect(0, 0, ts, ts));
-                if (grid[i][j] == 2) sTile.setTextureRect(IntRect(54, 0, ts, ts));
-
+                if (grid[i][j] == 0)
+                    continue;
+                sTile.setTextureRect(IntRect((grid[i][j] == 1) ? 0 : 54, 0, ts, ts));
                 sTile.setPosition(j * ts, i * ts);
                 window.draw(sTile);
             }
@@ -872,240 +655,444 @@ void startGame()
             window.draw(sEnemy);
         }
 
-        if (!Game) window.draw(sGameover);
+        window.draw(scoreText);
+        window.draw(bonusText);
 
         window.display();
     }
+
+    return score; // final score returned
 }
 
-
-// ---------- GUI DRAW FUNCTION ----------
-void drawGUI(RenderWindow &window, Font &font, Text &title,
-             RectangleShape &usernameBox, Text &usernameText,
-             RectangleShape &emailBox, Text &emailText,
-             RectangleShape &passwordBox, Text &passwordText,
-             RectangleShape &loginBtn, Text &loginBtnText,
-             RectangleShape &signupBtn, Text &signupBtnText,
-             RectangleShape &startBtn, Text &startBtnText,
-             Text &infoText)
+void updateInfoText(const std::string &username, PlayerSys &playerSys, sf::Text &infoText)
 {
-    window.clear(Color::Black);
-    window.draw(title);
-
-    window.draw(usernameBox);
-    window.draw(usernameText);
-
-    window.draw(emailBox);
-    window.draw(emailText);
-
-    window.draw(passwordBox);
-    window.draw(passwordText);
-
-    window.draw(loginBtn);
-    window.draw(loginBtnText);
-
-    window.draw(signupBtn);
-    window.draw(signupBtnText);
-
-    window.draw(startBtn);
-    window.draw(startBtnText);
-
-    window.draw(infoText);
-    window.display();
-}
-
-void setPlaceholders(Text &usernameText, Text &emailText, Text &passwordText,
-                     const string &typedUsername, const string &typedEmail, const string &typedPassword)
-{
-    if(typedUsername.empty()) usernameText.setString("Enter username...");
-    else usernameText.setString(typedUsername);
-
-    if(typedEmail.empty()) emailText.setString("Enter email...");
-    else emailText.setString(typedEmail);
-
-    if(typedPassword.empty()) passwordText.setString("Enter password...");
+    int idx = playerSys.findPlayer(username);
+    if (idx != -1)
+    {
+        Player &pl = playerSys.players[idx];
+        infoText.setString("Player: " + pl.getName() +
+                           "\nTotal Points: " + std::to_string(pl.total) +
+                           "\nWins: " + std::to_string(pl.wins) +
+                           "\nLosses: " + std::to_string(pl.losses));
+    }
     else
     {
-        string stars(typedPassword.size(), '*');
-        passwordText.setString(stars);
+        infoText.setString("Player not found.");
     }
 }
 
-int main() {
+int main()
+{
     Auth auth;
     PlayerSys playerSys;
-    playerSys.loadAllPlayers();  
+    playerSys.loadAllPlayers();
     FriendReqAlgo friendSys(&playerSys, &playerSys.hasher);
 
     RenderWindow window(VideoMode(800, 700), "Mini Social GUI");
-
     Font font;
-    if(!font.loadFromFile("./fonts/arial.ttf")) {
+    if (!font.loadFromFile("./fonts/arial.ttf"))
+    {
         cout << "Font not found!\n";
         return 1;
     }
 
     // ---------- GUI ELEMENTS ----------
-    Text title("Mini Social GUI", font, 40); title.setFillColor(Color::Cyan); title.setPosition(220,50);
+    Text title("Mini Social GUI", font, 40);
+    title.setFillColor(Color::Cyan);
+    title.setPosition(220, 50);
 
-    RectangleShape usernameBox(Vector2f(300,40)); usernameBox.setFillColor(Color(50,50,50)); usernameBox.setPosition(250,180);
-    Text usernameText("", font, 20); usernameText.setPosition(255,185); usernameText.setFillColor(Color::White);
+    // Login fields
+    RectangleShape usernameBox(Vector2f(300, 40));
+    usernameBox.setFillColor(Color(50, 50, 50));
+    usernameBox.setPosition(250, 180);
+    Text usernameText("", font, 20);
+    usernameText.setPosition(255, 185);
+    usernameText.setFillColor(Color::White);
 
-    RectangleShape emailBox(Vector2f(300,40)); emailBox.setFillColor(Color(50,50,50)); emailBox.setPosition(250,240);
-    Text emailText("", font, 20); emailText.setPosition(255,245); emailText.setFillColor(Color::White);
+    RectangleShape emailBox(Vector2f(300, 40));
+    emailBox.setFillColor(Color(50, 50, 50));
+    emailBox.setPosition(250, 240);
+    Text emailText("", font, 20);
+    emailText.setPosition(255, 245);
+    emailText.setFillColor(Color::White);
 
-    RectangleShape passwordBox(Vector2f(300,40)); passwordBox.setFillColor(Color(50,50,50)); passwordBox.setPosition(250,300);
-    Text passwordText("", font, 20); passwordText.setPosition(255,305); passwordText.setFillColor(Color::White);
+    RectangleShape passwordBox(Vector2f(300, 40));
+    passwordBox.setFillColor(Color(50, 50, 50));
+    passwordBox.setPosition(250, 300);
+    Text passwordText("", font, 20);
+    passwordText.setPosition(255, 305);
+    passwordText.setFillColor(Color::White);
 
-    RectangleShape loginBtn(Vector2f(120,40)); loginBtn.setFillColor(Color::Green); loginBtn.setPosition(250,380);
-    Text loginBtnText("Login", font, 20); loginBtnText.setPosition(280,385);
+    // Buttons
+    RectangleShape loginBtn(Vector2f(120, 40));
+    loginBtn.setFillColor(Color::Green);
+    loginBtn.setPosition(250, 380);
+    Text loginBtnText("Login", font, 20);
+    loginBtnText.setPosition(280, 385);
 
-    RectangleShape signupBtn(Vector2f(120,40)); signupBtn.setFillColor(Color::Blue); signupBtn.setPosition(430,380);
-    Text signupBtnText("Sign Up", font, 20); signupBtnText.setPosition(445,385);
+    RectangleShape signupBtn(Vector2f(120, 40));
+    signupBtn.setFillColor(Color::Blue);
+    signupBtn.setPosition(430, 380);
+    Text signupBtnText("Sign Up", font, 20);
+    signupBtnText.setPosition(445, 385);
 
-    RectangleShape startBtn(Vector2f(200,40)); startBtn.setFillColor(Color::Red); startBtn.setPosition(300,450);
-    Text startBtnText("Start Game", font, 20); startBtnText.setPosition(330,455);
+    // Post-login menu
+    RectangleShape startBtn(Vector2f(200, 50));
+    startBtn.setFillColor(Color::Red);
+    startBtn.setPosition(50, 150);
+    Text startBtnText("Start Game", font, 20);
+    startBtnText.setPosition(80, 165);
 
-    // --- FRIEND SYSTEM BUTTONS ---
-    RectangleShape viewFriendsBtn(Vector2f(180,40)); viewFriendsBtn.setFillColor(Color(100,200,100)); viewFriendsBtn.setPosition(50,550);
-    Text viewFriendsText("View Friends", font, 18); viewFriendsText.setPosition(60,555);
+    RectangleShape viewFriendsBtn(Vector2f(200, 50));
+    viewFriendsBtn.setFillColor(Color(100, 200, 100));
+    viewFriendsBtn.setPosition(50, 220);
+    Text viewFriendsText("View Friends", font, 20);
+    viewFriendsText.setPosition(80, 235);
 
-    RectangleShape viewReqBtn(Vector2f(180,40)); viewReqBtn.setFillColor(Color(100,200,200)); viewReqBtn.setPosition(250,550);
-    Text viewReqText("View Requests", font, 18); viewReqText.setPosition(260,555);
+    RectangleShape sendReqBtn(Vector2f(200, 50));
+    sendReqBtn.setFillColor(Color(200, 100, 100));
+    sendReqBtn.setPosition(50, 290);
+    Text sendReqText("Send Request", font, 20);
+    sendReqText.setPosition(80, 305);
 
-    RectangleShape sendReqBtn(Vector2f(180,40)); sendReqBtn.setFillColor(Color(200,100,100)); sendReqBtn.setPosition(450,550);
-    Text sendReqText("Send Request", font, 18); sendReqText.setPosition(460,555);
+    RectangleShape viewReqBtn(Vector2f(200, 50));
+    viewReqBtn.setFillColor(Color(100, 200, 200));
+    viewReqBtn.setPosition(50, 360);
+    Text viewReqText("Pending Requests", font, 20);
+    viewReqText.setPosition(60, 375);
 
-    // --- FRIEND DISPLAY BOXES ---
-    RectangleShape friendsBox(Vector2f(300,150)); friendsBox.setFillColor(Color(30,30,30)); friendsBox.setPosition(50,400);
-    Text friendsText("", font, 16); friendsText.setPosition(60,410); friendsText.setFillColor(Color::White);
+    Text infoText("", font, 18);
+    infoText.setFillColor(Color::Yellow);
+    infoText.setPosition(50, 620);
 
-    RectangleShape reqBox(Vector2f(300,150)); reqBox.setFillColor(Color(30,30,30)); reqBox.setPosition(400,400);
-    Text reqText("", font, 16); reqText.setPosition(410,410); reqText.setFillColor(Color::White);
+    // Popup
+    RectangleShape popupBox(Vector2f(500, 300));
+    popupBox.setFillColor(Color(30, 30, 30));
+    popupBox.setPosition(150, 200);
+    Text popupText("", font, 18);
+    popupText.setFillColor(Color::White);
+    popupText.setPosition(160, 220);
 
-    RectangleShape friendInputBox(Vector2f(180,30)); friendInputBox.setFillColor(Color(50,50,50)); friendInputBox.setPosition(450,510);
-    Text friendInputText("", font, 16); friendInputText.setPosition(455,515); friendInputText.setFillColor(Color::White);
+    RectangleShape closeBtn(Vector2f(100, 40));
+    closeBtn.setFillColor(Color::Red);
+    closeBtn.setPosition(330, 430);
+    Text closeText("Close", font, 20);
+    closeText.setPosition(355, 435);
 
-    RectangleShape infoTextBox(Vector2f(700,40)); infoTextBox.setFillColor(Color(50,50,50)); infoTextBox.setPosition(50,610);
-    Text infoText("", font, 18); infoText.setFillColor(Color::Yellow); infoText.setPosition(60,615);
+    // Accept/Reject buttons (for pending requests FIFO)
+    RectangleShape acceptBtn(Vector2f(120, 40));
+    acceptBtn.setFillColor(Color::Green);
+    acceptBtn.setPosition(200, 400);
+    Text acceptText("Accept", font, 20);
+    acceptText.setPosition(225, 405);
+    RectangleShape rejectBtn(Vector2f(120, 40));
+    rejectBtn.setFillColor(Color::Red);
+    rejectBtn.setPosition(400, 400);
+    Text rejectText("Reject", font, 20);
+    rejectText.setPosition(425, 405);
 
-    string typedUsername="", typedEmail="", typedPassword="", typedFriendName="";
-    bool typingUsername=false, typingEmail=false, typingPassword=false, typingFriend=false;
-    string loggedInUser="";
+    // --- State variables ---
+    string typedUsername = "", typedEmail = "", typedPassword = "", typedFriendName = "";
+    bool typingUsername = false, typingEmail = false, typingPassword = false, typingFriend = false;
+    string loggedInUser = "";
+    bool showPopup = false;
+    bool handlingRequest = false; // FIFO request handling
 
-    while(window.isOpen()) {
+    while (window.isOpen())
+    {
         Event event;
-        while(window.pollEvent(event)) {
-            if(event.type == Event::Closed) window.close();
+        while (window.pollEvent(event))
+        {
+            if (event.type == Event::Closed)
+                window.close();
 
-            if(event.type == Event::MouseButtonPressed) {
+            if (event.type == Event::MouseButtonPressed)
+            {
                 Vector2i mousePos = Mouse::getPosition(window);
 
+                // Activate typing boxes
                 typingUsername = usernameBox.getGlobalBounds().contains(mousePos.x, mousePos.y);
-                typingEmail    = emailBox.getGlobalBounds().contains(mousePos.x, mousePos.y);
+                typingEmail = emailBox.getGlobalBounds().contains(mousePos.x, mousePos.y);
                 typingPassword = passwordBox.getGlobalBounds().contains(mousePos.x, mousePos.y);
-                typingFriend   = friendInputBox.getGlobalBounds().contains(mousePos.x, mousePos.y);
+                // do not flip typingFriend unless popup send request opens it
+                // typingFriend = false;
 
-                if(typingUsername) typingEmail = typingPassword = typingFriend = false;
-                if(typingEmail) typingUsername = typingPassword = typingFriend = false;
-                if(typingPassword) typingUsername = typingEmail = typingFriend = false;
+                if (loggedInUser.empty())
+                {
+                    // Login
+                    if (loginBtn.getGlobalBounds().contains(mousePos.x, mousePos.y))
+                    {
+                        if (!typedUsername.empty() && !typedPassword.empty())
+                        {
+                            loggedInUser = auth.login(typedUsername, typedPassword);
+                            if (!loggedInUser.empty())
+                            {
+                                Player &p = playerSys.players[playerSys.findPlayer(loggedInUser)];
+                                infoText.setString(
+                                    "Logged in as: " + loggedInUser +
+                                    " | Total: " + to_string(p.total) +
+                                    " | Wins: " + to_string(p.wins) +
+                                    " | Losses: " + to_string(p.losses));
+                            }
+                            else
+                                infoText.setString("Login failed!");
+                        }
+                        else
+                            infoText.setString("Enter username & password");
+                    }
 
-                // --- LOGIN ---
-                if(loginBtn.getGlobalBounds().contains(mousePos.x, mousePos.y)) {
-                    if(!typedUsername.empty() && !typedPassword.empty()) {
-                        loggedInUser = auth.login(typedUsername, typedPassword);
-                        if(!loggedInUser.empty()) infoText.setString("Logged in as: "+loggedInUser);
-                        else infoText.setString("Login failed!");
-                    } else infoText.setString("Enter username & password");
+                    // Signup
+                    if (signupBtn.getGlobalBounds().contains(mousePos.x, mousePos.y))
+                    {
+                        if (!typedUsername.empty() && !typedEmail.empty() && !typedPassword.empty())
+                        {
+                            if (auth.signupGUI(typedUsername, typedEmail, typedPassword))
+                            {
+                                loggedInUser = typedUsername;
+                                playerSys.loadAllPlayers();
+                                Player &p = playerSys.players[playerSys.findPlayer(loggedInUser)];
+                                infoText.setString(
+                                    "Signed up & logged in as: " + loggedInUser +
+                                    " | Total: " + to_string(p.total) +
+                                    " | Wins: " + to_string(p.wins) +
+                                    " | Losses: " + to_string(p.losses));
+                            }
+                            else
+                                infoText.setString("Signup failed!");
+                        }
+                        else
+                            infoText.setString("Enter username, email & password");
+                    }
                 }
+                else
+                {
+                    // Post-login menu
+                    Player &p = playerSys.players[playerSys.findPlayer(loggedInUser)];
 
-                // --- SIGNUP ---
-                if(signupBtn.getGlobalBounds().contains(mousePos.x, mousePos.y)) {
-                    if(!typedUsername.empty() && !typedEmail.empty() && !typedPassword.empty()) {
-                        if(auth.signupGUI(typedUsername, typedEmail, typedPassword)) {
-                            loggedInUser = typedUsername;
-                            infoText.setString("Signed up & logged in as: "+loggedInUser);
+                    // if(startBtn.getGlobalBounds().contains(mousePos.x, mousePos.y))
+                    // {
+                    //     // reset global result
+                    //     g_lastScore = 0;
+                    //     g_lastWin = false;
+
+                    //     // run game (blocking until done)
+                    //     startGame();
+
+                    //     // after game: update player's stats and save
+                    //     int idx = playerSys.findPlayer(loggedInUser);
+                    //     if(idx != -1)
+                    //     {
+                    //         Player &pl = playerSys.players[idx];
+                    //         pl.total += g_lastScore;
+                    //         if(g_lastWin) pl.wins++;
+                    //         else pl.losses++;
+                    //         // save to file
+                    //         pl.saveToFile(string("./users/") + pl.getName() + ".txt");
+
+                    //         // reload players info to keep everything consistent if needed
+                    //         playerSys.loadAllPlayers();
+
+                    //         // update infoText
+                    //         Player &updated = playerSys.players[playerSys.findPlayer(loggedInUser)];
+                    //         infoText.setString(
+                    //             "Logged in as: " + loggedInUser +
+                    //             " | Total: " + to_string(updated.total) +
+                    //             " | Wins: " + to_string(updated.wins) +
+                    //             " | Losses: " + to_string(updated.losses)
+                    //         );
+                    //     }
+                    // }
+
+                    if (startBtn.getGlobalBounds().contains(mousePos.x, mousePos.y))
+                    {
+                        // Launch game and get final score
+                        int scoreEarned = startGame();
+
+                        // Update player's total points immediately
+                        int idx = playerSys.findPlayer(loggedInUser);
+                        if (idx != -1)
+                        {
+                            Player &pl = playerSys.players[idx];
+                            pl.total += scoreEarned; // add earned score to total points
+                            pl.saveToFile("./users/" + pl.getName() + ".txt");
+
+                            // Reload player data and update GUI info
                             playerSys.loadAllPlayers();
-                        } else infoText.setString("Signup failed! Check email/pass rules.");
-                    } else infoText.setString("Enter username, email & password");
-                }
-
-                // --- START GAME ---
-                if(startBtn.getGlobalBounds().contains(mousePos.x, mousePos.y)) {
-                    if(!loggedInUser.empty()) {
-                        window.close();
-                        startGame();
-                    } else infoText.setString("Login first to start game!");
-                }
-
-                // --- FRIEND SYSTEM ---
-                if(!loggedInUser.empty()) {
-                    if(viewFriendsBtn.getGlobalBounds().contains(mousePos.x, mousePos.y)) {
-                        string display="";
-                        Player &p = playerSys.players[playerSys.findPlayer(loggedInUser)];
-                        FriendNode *curr = p.friendsHead;
-                        while(curr) { display += curr->name + "\n"; curr=curr->next; }
-                        friendsText.setString(display.empty() ? "No friends yet." : display);
-                        infoText.setString("Friends displayed.");
+                            updateInfoText(loggedInUser, playerSys, infoText);
+                        }
                     }
 
-                    if(viewReqBtn.getGlobalBounds().contains(mousePos.x, mousePos.y)) {
-                        string display="";
-                        Player &p = playerSys.players[playerSys.findPlayer(loggedInUser)];
-                        RequestNode *curr = p.requestsHead;
-                        while(curr) { display += curr->name + "\n"; curr=curr->next; }
-                        reqText.setString(display.empty() ? "No pending requests." : display);
-                        infoText.setString("Requests displayed.");
+                    if (viewFriendsBtn.getGlobalBounds().contains(mousePos.x, mousePos.y))
+                    {
+                        popupText.setString(friendSys.getFriendsStr(loggedInUser));
+                        showPopup = true;
+                        handlingRequest = false;
                     }
 
-                    if(sendReqBtn.getGlobalBounds().contains(mousePos.x, mousePos.y)) {
-                        if(!typedFriendName.empty()) {
-                            friendSys.sendReq(loggedInUser, typedFriendName);
-                            infoText.setString("Request sent to " + typedFriendName);
-                            typedFriendName="";
-                            friendInputText.setString("");
-                        } else infoText.setString("Type friend username to send request.");
+                    if (viewReqBtn.getGlobalBounds().contains(mousePos.x, mousePos.y))
+                    {
+                        int idx = playerSys.findPlayer(loggedInUser);
+                        if (idx != -1)
+                        {
+                            RequestNode *firstReq = playerSys.players[idx].requestsHead;
+                            if (firstReq)
+                            {
+                                popupText.setString("Pending request from: " + firstReq->name);
+                                handlingRequest = true;
+                                showPopup = true;
+                            }
+                            else
+                            {
+                                popupText.setString("No pending requests.");
+                                handlingRequest = false;
+                                showPopup = true;
+                            }
+                        }
+                    }
+
+                    if (sendReqBtn.getGlobalBounds().contains(mousePos.x, mousePos.y))
+                    {
+                        popupText.setString("Enter friend's username:\n");
+                        typedFriendName = "";
+                        typingFriend = true;
+                        showPopup = true;
+                    }
+                }
+
+                // Close popup
+                if (showPopup && closeBtn.getGlobalBounds().contains(mousePos.x, mousePos.y))
+                {
+                    showPopup = false;
+                    typingFriend = false;
+                    handlingRequest = false;
+                }
+
+                // Accept / Reject handling for FIFO pending requests
+                if (showPopup && handlingRequest)
+                {
+                    int idx = playerSys.findPlayer(loggedInUser);
+                    if (idx != -1)
+                    {
+                        RequestNode *firstReq = playerSys.players[idx].requestsHead;
+                        if (firstReq)
+                        {
+                            if (acceptBtn.getGlobalBounds().contains(mousePos.x, mousePos.y))
+                            {
+                                friendSys.acceptReq(loggedInUser, firstReq->name);
+                            }
+                            if (rejectBtn.getGlobalBounds().contains(mousePos.x, mousePos.y))
+                            {
+                                friendSys.rejectReq(loggedInUser, firstReq->name);
+                            }
+
+                            // update local copy from playerSys
+                            firstReq = playerSys.players[idx].requestsHead;
+                            if (firstReq)
+                                popupText.setString("Pending request from: " + firstReq->name);
+                            else
+                                handlingRequest = false;
+                        }
                     }
                 }
             }
 
-            // --- TEXT INPUT ---
-            if(event.type == Event::TextEntered) {
-                if(event.text.unicode < 128) {
+            // Text input events
+            if (event.type == Event::TextEntered)
+            {
+                if (event.text.unicode < 128)
+                {
                     char c = static_cast<char>(event.text.unicode);
-                    if(typingUsername) { if(c==8 && !typedUsername.empty()) typedUsername.pop_back(); else if(c!=8) typedUsername+=c; }
-                    if(typingEmail)    { if(c==8 && !typedEmail.empty()) typedEmail.pop_back();    else if(c!=8) typedEmail+=c; }
-                    if(typingPassword) { if(c==8 && !typedPassword.empty()) typedPassword.pop_back(); else if(c!=8) typedPassword+=c; }
-                    if(typingFriend)   { if(c==8 && !typedFriendName.empty()) typedFriendName.pop_back(); else if(c!=8) typedFriendName+=c; friendInputText.setString(typedFriendName);}
+                    if (typingUsername)
+                    {
+                        if (c == 8 && !typedUsername.empty())
+                            typedUsername.pop_back();
+                        else if (c != 8)
+                            typedUsername += c;
+                    }
+                    if (typingEmail)
+                    {
+                        if (c == 8 && !typedEmail.empty())
+                            typedEmail.pop_back();
+                        else if (c != 8)
+                            typedEmail += c;
+                    }
+                    if (typingPassword)
+                    {
+                        if (c == 8 && !typedPassword.empty())
+                            typedPassword.pop_back();
+                        else if (c != 8)
+                            typedPassword += c;
+                    }
+
+                    if (typingFriend)
+                    {
+                        if (c == 8 && !typedFriendName.empty())
+                            typedFriendName.pop_back();
+                        else if (c != 8 && c != '\r')
+                            typedFriendName += c;
+                        popupText.setString("Enter friend's username:\n" + typedFriendName);
+                    }
                 }
             }
-        }
 
-        // --- PLACEHOLDERS ---
+            // Enter key for sending friend request
+            if (event.type == Event::KeyPressed && typingFriend && event.key.code == Keyboard::Enter)
+            {
+                if (!typedFriendName.empty() && !loggedInUser.empty())
+                {
+                    friendSys.sendReq(loggedInUser, typedFriendName);
+                    popupText.setString("Request sent to: " + typedFriendName);
+                    typedFriendName = "";
+                }
+                typingFriend = false;
+            }
+        } // event loop end
+
+        // placeholders
         setPlaceholders(usernameText, emailText, passwordText, typedUsername, typedEmail, typedPassword);
-        if(typedFriendName.empty()) friendInputText.setString("Enter friend username...");
 
-        // --- DRAW ---
+        // ---------- DRAW ----------
         window.clear(Color::Black);
         window.draw(title);
 
-        window.draw(usernameBox); window.draw(usernameText);
-        window.draw(emailBox); window.draw(emailText);
-        window.draw(passwordBox); window.draw(passwordText);
+        if (loggedInUser.empty())
+        {
+            window.draw(usernameBox);
+            window.draw(usernameText);
+            window.draw(emailBox);
+            window.draw(emailText);
+            window.draw(passwordBox);
+            window.draw(passwordText);
+            window.draw(loginBtn);
+            window.draw(loginBtnText);
+            window.draw(signupBtn);
+            window.draw(signupBtnText);
+        }
+        else
+        {
+            window.draw(startBtn);
+            window.draw(startBtnText);
+            window.draw(viewFriendsBtn);
+            window.draw(viewFriendsText);
+            window.draw(sendReqBtn);
+            window.draw(sendReqText);
+            window.draw(viewReqBtn);
+            window.draw(viewReqText);
+        }
 
-        window.draw(loginBtn); window.draw(loginBtnText);
-        window.draw(signupBtn); window.draw(signupBtnText);
-        window.draw(startBtn); window.draw(startBtnText);
+        window.draw(infoText);
 
-        window.draw(viewFriendsBtn); window.draw(viewFriendsText);
-        window.draw(viewReqBtn); window.draw(viewReqText);
-        window.draw(sendReqBtn); window.draw(sendReqText);
-
-        window.draw(friendsBox); window.draw(friendsText);
-        window.draw(reqBox); window.draw(reqText);
-        window.draw(friendInputBox); window.draw(friendInputText);
-
-        window.draw(infoTextBox); window.draw(infoText);
+        if (showPopup)
+        {
+            drawPopup(window, popupBox, popupText, closeBtn, closeText);
+            if (handlingRequest)
+            {
+                window.draw(acceptBtn);
+                window.draw(acceptText);
+                window.draw(rejectBtn);
+                window.draw(rejectText);
+            }
+        }
 
         window.display();
     }

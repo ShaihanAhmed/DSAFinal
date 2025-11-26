@@ -18,6 +18,9 @@ public:
     void rejectReq(const string &user, const string &from);
     void viewFriends(const string &user);
     void viewRequests(const string &user);
+
+    string getFriendsStr(const string &user);
+    string getRequestsStr(const string &user);
 };
 
 #endif

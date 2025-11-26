@@ -31,28 +31,6 @@ void Player::setCreds(const string &n, const string &p, const string &e) {
     email = e;
 }
 
-// string* Player::splitPipe(const string &s, int &outCount) {
-//     outCount = 0;
-
-//     if (s.size() == 0) return nullptr;
-
-//     for (char c : s)
-//         if (c == '|') outCount++;
-
-//     string *arr = new string[outCount];
-//     string temp = "";
-//     int idx = 0;
-
-//     for (int i = 0; i <= s.size(); i++) {
-//         if (i == s.size() || s[i] == '|') {
-//             arr[idx++] = temp;
-//             temp = "";
-//         } else temp += s[i];
-//     }
-
-//     return arr;
-// }
-
 string* Player::splitPipe(const string &s, int &outCount) {
     if (s.empty()) {
         outCount = 0;

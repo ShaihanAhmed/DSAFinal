@@ -1,9 +1,9 @@
-#include "FriendReqALGO.h"
+// #include "FriendReqALGO.h"
 
-FriendReqAlgo::FriendReqAlgo(PlayerSys *p, HashingALGO *h) {
-    ps = p;
-    ht = h;
-}
+// FriendReqAlgo::FriendReqAlgo(PlayerSys *p, HashingALGO *h) {
+//     ps = p;
+//     ht = h;
+// }
 
 // void FriendReqAlgo::sendReq(const string &from, const string &to) {
 //     int toIdx = ht->search(to);
@@ -13,9 +13,14 @@ FriendReqAlgo::FriendReqAlgo(PlayerSys *p, HashingALGO *h) {
 //         return;
 //     }
 
+//     // Add request to receiver
 //     RequestNode *node = new RequestNode(from);
 //     node->next = ps->players[toIdx].requestsHead;
 //     ps->players[toIdx].requestsHead = node;
+
+//     // Save receiver file immediately
+//     string filepath = "./users/" + ps->players[toIdx].getName() + ".txt";
+//     ps->players[toIdx].saveToFile(filepath);
 
 //     cout << "Request sent from " << from << " to " << to << "\n";
 // }
@@ -26,9 +31,9 @@ FriendReqAlgo::FriendReqAlgo(PlayerSys *p, HashingALGO *h) {
 
 //     if (u == -1 || f == -1) return;
 
+//     // Remove from requests list (receiver side)
 //     RequestNode *curr = ps->players[u].requestsHead;
 //     RequestNode *prev = nullptr;
-
 //     while (curr) {
 //         if (curr->name == from) {
 //             if (prev) prev->next = curr->next;
@@ -40,6 +45,7 @@ FriendReqAlgo::FriendReqAlgo(PlayerSys *p, HashingALGO *h) {
 //         curr = curr->next;
 //     }
 
+//     // Add to friends (both sides)
 //     FriendNode *a = new FriendNode(from);
 //     a->next = ps->players[u].friendsHead;
 //     ps->players[u].friendsHead = a;
@@ -48,12 +54,15 @@ FriendReqAlgo::FriendReqAlgo(PlayerSys *p, HashingALGO *h) {
 //     b->next = ps->players[f].friendsHead;
 //     ps->players[f].friendsHead = b;
 
+//     // Save both players immediately
+//     ps->players[u].saveToFile("./users/" + ps->players[u].getName() + ".txt");
+//     ps->players[f].saveToFile("./users/" + ps->players[f].getName() + ".txt");
+
 //     cout << user << " and " << from << " are now friends!\n";
 // }
 
 // void FriendReqAlgo::rejectReq(const string &user, const string &from) {
 //     int u = ht->search(user);
-
 //     if (u == -1) return;
 
 //     RequestNode *curr = ps->players[u].requestsHead;
@@ -64,6 +73,10 @@ FriendReqAlgo::FriendReqAlgo(PlayerSys *p, HashingALGO *h) {
 //             if (prev) prev->next = curr->next;
 //             else ps->players[u].requestsHead = curr->next;
 //             delete curr;
+
+//             // Save user file immediately
+//             ps->players[u].saveToFile("./users/" + ps->players[u].getName() + ".txt");
+
 //             cout << "Request rejected.\n";
 //             return;
 //         }
@@ -72,13 +85,49 @@ FriendReqAlgo::FriendReqAlgo(PlayerSys *p, HashingALGO *h) {
 //     }
 // }
 
+
+
+// void FriendReqAlgo::viewFriends(const string &user) {
+//     int idx = ht->search(user);
+
+//     if (idx == -1) return;
+
+//     cout << "\nFriends of " << user << ":\n";
+//     FriendNode *f = ps->players[idx].friendsHead;
+
+//     while (f) {
+//         cout << "  - " << f->name << "\n";
+//         f = f->next;
+//     }
+// }
+
+// void FriendReqAlgo::viewRequests(const string &user) {
+//     int idx = ht->search(user);
+//     if (idx == -1) return;
+
+//     cout << "\nPending requests for " << user << ":\n";
+//     RequestNode *r = ps->players[idx].requestsHead;
+
+//     while (r) {
+//         cout << "  - " << r->name << "\n";
+//         r = r->next;
+//     }
+// }
+
+
+// -----------------------------------------------------------------
+// -----------------------------------------------------------------
+// ------------------------- GUI BASED IMP ---------------------------
+#include "FriendReqALGO.h"
+
+FriendReqAlgo::FriendReqAlgo(PlayerSys *p, HashingALGO *h) {
+    ps = p;
+    ht = h;
+}
+
 void FriendReqAlgo::sendReq(const string &from, const string &to) {
     int toIdx = ht->search(to);
-
-    if (toIdx == -1) {
-        cout << "User does not exist!\n";
-        return;
-    }
+    if (toIdx == -1) return;
 
     // Add request to receiver
     RequestNode *node = new RequestNode(from);
@@ -88,14 +137,11 @@ void FriendReqAlgo::sendReq(const string &from, const string &to) {
     // Save receiver file immediately
     string filepath = "./users/" + ps->players[toIdx].getName() + ".txt";
     ps->players[toIdx].saveToFile(filepath);
-
-    cout << "Request sent from " << from << " to " << to << "\n";
 }
 
 void FriendReqAlgo::acceptReq(const string &user, const string &from) {
     int u = ht->search(user);
     int f = ht->search(from);
-
     if (u == -1 || f == -1) return;
 
     // Remove from requests list (receiver side)
@@ -124,8 +170,6 @@ void FriendReqAlgo::acceptReq(const string &user, const string &from) {
     // Save both players immediately
     ps->players[u].saveToFile("./users/" + ps->players[u].getName() + ".txt");
     ps->players[f].saveToFile("./users/" + ps->players[f].getName() + ".txt");
-
-    cout << user << " and " << from << " are now friends!\n";
 }
 
 void FriendReqAlgo::rejectReq(const string &user, const string &from) {
@@ -134,7 +178,6 @@ void FriendReqAlgo::rejectReq(const string &user, const string &from) {
 
     RequestNode *curr = ps->players[u].requestsHead;
     RequestNode *prev = nullptr;
-
     while (curr) {
         if (curr->name == from) {
             if (prev) prev->next = curr->next;
@@ -143,8 +186,6 @@ void FriendReqAlgo::rejectReq(const string &user, const string &from) {
 
             // Save user file immediately
             ps->players[u].saveToFile("./users/" + ps->players[u].getName() + ".txt");
-
-            cout << "Request rejected.\n";
             return;
         }
         prev = curr;
@@ -152,18 +193,14 @@ void FriendReqAlgo::rejectReq(const string &user, const string &from) {
     }
 }
 
-
-
 void FriendReqAlgo::viewFriends(const string &user) {
     int idx = ht->search(user);
-
     if (idx == -1) return;
 
-    cout << "\nFriends of " << user << ":\n";
+    // For GUI, you could fetch the string outside
+    // Iterating just like before (logic intact)
     FriendNode *f = ps->players[idx].friendsHead;
-
     while (f) {
-        cout << "  - " << f->name << "\n";
         f = f->next;
     }
 }
@@ -172,11 +209,27 @@ void FriendReqAlgo::viewRequests(const string &user) {
     int idx = ht->search(user);
     if (idx == -1) return;
 
-    cout << "\nPending requests for " << user << ":\n";
     RequestNode *r = ps->players[idx].requestsHead;
-
     while (r) {
-        cout << "  - " << r->name << "\n";
         r = r->next;
     }
+}
+
+// --- Optional helpers for GUI display ---
+string FriendReqAlgo::getFriendsStr(const string &user) {
+    int idx = ht->search(user);
+    if(idx==-1) return "User not found.";
+    string res;
+    FriendNode *f = ps->players[idx].friendsHead;
+    while(f){ res += f->name + "\n"; f=f->next; }
+    return res.empty() ? "No friends yet." : res;
+}
+
+string FriendReqAlgo::getRequestsStr(const string &user) {
+    int idx = ht->search(user);
+    if(idx==-1) return "User not found.";
+    string res;
+    RequestNode *r = ps->players[idx].requestsHead;
+    while(r){ res += r->name + "\n"; r=r->next; }
+    return res.empty() ? "No pending requests." : res;
 }
