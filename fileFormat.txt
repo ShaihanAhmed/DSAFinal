@@ -5,3 +5,376 @@ frList(each name seperated by | )
 reqList(each name seperated by | )
 themeId(seperated by | )
 SaveGame(thinking of imp it in a diff file only for game progress)
+
+//--------------------------------------------------------------------------------
+
+
+// void startGame()
+// {
+//     srand(time(0));
+
+//     RenderWindow window(VideoMode(N * ts, M * ts), "Xonix Game!");
+//     window.setFramerateLimit(60);
+
+//     Texture t1, t2, t3;
+//     t1.loadFromFile("images/tiles.png");
+//     t2.loadFromFile("images/gameover.png");
+//     t3.loadFromFile("images/enemy.png");
+
+//     Sprite sTile(t1), sGameover(t2), sEnemy(t3);
+//     sGameover.setPosition(100, 100);
+//     sEnemy.setOrigin(20, 20);
+
+//     int enemyCount = 4;
+//     Enemy a[10];
+
+//     bool Game = true;
+//     int x = 0, y = 0, dx = 0, dy = 0;
+//     float timer = 0, delay = 0.07;
+//     Clock clock;
+
+//     for (int i = 0; i < M; i++)
+//         for (int j = 0; j < N; j++)
+//             if (i == 0 || j == 0 || i == M - 1 || j == N - 1)
+//                 grid[i][j] = 1;
+
+//     while (window.isOpen())
+//     {
+//         float time = clock.getElapsedTime().asSeconds();
+//         clock.restart();
+//         timer += time;
+
+//         Event e;
+//         while (window.pollEvent(e))
+//         {
+//             if (e.type == Event::Closed)
+//                 window.close();
+
+//             if (e.type == Event::KeyPressed)
+//                 if (e.key.code == Keyboard::Escape)
+//                 {
+//                     for (int i = 1; i < M - 1; i++)
+//                         for (int j = 1; j < N - 1; j++)
+//                             grid[i][j] = 0;
+
+//                     x = 10;
+//                     y = 0;
+//                     Game = true;
+//                 }
+//         }
+
+//         if (Keyboard::isKeyPressed(Keyboard::Left))
+//         {
+//             dx = -1;
+//             dy = 0;
+//         }
+//         if (Keyboard::isKeyPressed(Keyboard::Right))
+//         {
+//             dx = 1;
+//             dy = 0;
+//         }
+//         if (Keyboard::isKeyPressed(Keyboard::Up))
+//         {
+//             dx = 0;
+//             dy = -1;
+//         }
+//         if (Keyboard::isKeyPressed(Keyboard::Down))
+//         {
+//             dx = 0;
+//             dy = 1;
+//         }
+
+//         if (!Game)
+//             continue;
+
+//         if (timer > delay)
+//         {
+//             x += dx;
+//             y += dy;
+
+//             if (x < 0)
+//                 x = 0;
+//             if (x > N - 1)
+//                 x = N - 1;
+//             if (y < 0)
+//                 y = 0;
+//             if (y > M - 1)
+//                 y = M - 1;
+
+//             if (grid[y][x] == 2)
+//                 Game = false;
+//             if (grid[y][x] == 0)
+//                 grid[y][x] = 2;
+
+//             timer = 0;
+//         }
+
+//         for (int i = 0; i < enemyCount; i++)
+//             a[i].move();
+
+//         if (grid[y][x] == 1)
+//         {
+//             dx = dy = 0;
+
+//             for (int i = 0; i < enemyCount; i++)
+//                 drop(a[i].y / ts, a[i].x / ts);
+
+//             for (int i = 0; i < M; i++)
+//                 for (int j = 0; j < N; j++)
+//                     if (grid[i][j] == -1)
+//                         grid[i][j] = 0;
+//                     else
+//                         grid[i][j] = 1;
+//         }
+
+//         for (int i = 0; i < enemyCount; i++)
+//             if (grid[a[i].y / ts][a[i].x / ts] == 2)
+//                 Game = false;
+
+//         window.clear();
+
+//         for (int i = 0; i < M; i++)
+//             for (int j = 0; j < N; j++)
+//             {
+//                 if (grid[i][j] == 0)
+//                     continue;
+
+//                 if (grid[i][j] == 1)
+//                     sTile.setTextureRect(IntRect(0, 0, ts, ts));
+//                 if (grid[i][j] == 2)
+//                     sTile.setTextureRect(IntRect(54, 0, ts, ts));
+
+//                 sTile.setPosition(j * ts, i * ts);
+//                 window.draw(sTile);
+//             }
+
+//         sTile.setTextureRect(IntRect(36, 0, ts, ts));
+//         sTile.setPosition(x * ts, y * ts);
+//         window.draw(sTile);
+
+//         sEnemy.rotate(10);
+//         for (int i = 0; i < enemyCount; i++)
+//         {
+//             sEnemy.setPosition(a[i].x, a[i].y);
+//             window.draw(sEnemy);
+//         }
+
+//         if (!Game)
+//             window.draw(sGameover);
+
+//         window.display();
+//     }
+// }
+
+// aqsa's imp for strt game ----------------------------------------------
+// void startGame()
+// {
+//     int tilesCaptured = 0;
+//     int score = 0;
+//     int bonusCount = 0;
+//     srand(time(0));
+
+//     RenderWindow window(VideoMode(N * ts, M * ts), "Xonix Game!");
+//     window.setFramerateLimit(60);
+
+//     Texture t1, t2, t3;
+//     t1.loadFromFile("images/tiles.png");
+//     t2.loadFromFile("images/gameover.png");
+//     t3.loadFromFile("images/enemy.png");
+
+//     Sprite sTile(t1), sGameover(t2), sEnemy(t3);
+//     sGameover.setPosition(100, 100);
+//     sEnemy.setOrigin(20, 20);
+
+//     int enemyCount = 4;
+//     Enemy a[10];
+
+//     bool Game = true;
+//     int x = 0, y = 0, dx = 0, dy = 0;
+//     float timer = 0, delay = 0.07;
+//     Clock clock;
+
+//     for (int i = 0; i < M; i++)
+//         for (int j = 0; j < N; j++)
+//             if (i == 0 || j == 0 || i == M - 1 || j == N - 1)
+//                 grid[i][j] = 1;
+
+//     // ---------- GUI Text for Score ----------
+//     Font font;
+//     if (!font.loadFromFile("fonts/arial.ttf"))
+//     {
+//         cout << "Font not found!\n";
+//         return;
+//     }
+//     Text scoreText("", font, 24);
+//     scoreText.setFillColor(Color::Yellow);
+//     scoreText.setPosition(10, 10);
+
+//     Text bonusText("", font, 20);
+//     bonusText.setFillColor(Color::Cyan);
+//     bonusText.setPosition(10, 40);
+
+//     while (window.isOpen())
+//     {
+//         float time = clock.getElapsedTime().asSeconds();
+//         clock.restart();
+//         timer += time;
+
+//         Event e;
+//         while (window.pollEvent(e))
+//         {
+//             if (e.type == Event::Closed)
+//                 window.close();
+
+//             if (e.type == Event::KeyPressed)
+//                 if (e.key.code == Keyboard::Escape)
+//                 {
+//                     for (int i = 1; i < M - 1; i++)
+//                         for (int j = 1; j < N - 1; j++)
+//                             grid[i][j] = 0;
+
+//                     x = 10;
+//                     y = 0;
+//                     Game = true;
+//                     score = 0;
+//                     bonusCount = 0;
+//                 }
+//         }
+
+//         if (Keyboard::isKeyPressed(Keyboard::Left))
+//         {
+//             dx = -1;
+//             dy = 0;
+//         }
+//         if (Keyboard::isKeyPressed(Keyboard::Right))
+//         {
+//             dx = 1;
+//             dy = 0;
+//         }
+//         if (Keyboard::isKeyPressed(Keyboard::Up))
+//         {
+//             dx = 0;
+//             dy = -1;
+//         }
+//         if (Keyboard::isKeyPressed(Keyboard::Down))
+//         {
+//             dx = 0;
+//             dy = 1;
+//         }
+
+//         if (!Game)
+//             continue;
+
+//         if (timer > delay)
+//         {
+//             x += dx;
+//             y += dy;
+
+//             if (x < 0)
+//                 x = 0;
+//             if (x > N - 1)
+//                 x = N - 1;
+//             if (y < 0)
+//                 y = 0;
+//             if (y > M - 1)
+//                 y = M - 1;
+
+//             if (grid[y][x] == 2)
+//                 Game = false;
+//             if (grid[y][x] == 0)
+//                 grid[y][x] = 2;
+
+//             timer = 0;
+//         }
+
+//         for (int i = 0; i < enemyCount; i++)
+//             a[i].move();
+
+//         if (grid[y][x] == 1)
+//         {
+//             tilesCaptured = 0;
+//             dx = dy = 0;
+
+//             for (int i = 0; i < enemyCount; i++)
+//                 drop(a[i].y / ts, a[i].x / ts);
+
+//             for (int i = 0; i < M; i++)
+//                 for (int j = 0; j < N; j++)
+//                     if (grid[i][j] == -1)
+//                         grid[i][j] = 0;
+//                     else if (grid[i][j] == 0 || grid[i][j] == 2)
+//                     {
+//                         grid[i][j] = 1;
+//                         tilesCaptured++;
+//                     }
+
+//             int threshold;
+//             int multiplier;
+
+//             if (bonusCount <= 2)
+//                 threshold = 10;
+//             else
+//                 threshold = 5;
+
+//             if (bonusCount > 5)
+//                 multiplier = 4;
+//             else
+//                 multiplier = 2;
+
+//             if (tilesCaptured > threshold)
+//             {
+//                 score += tilesCaptured * multiplier;
+//                 bonusCount++;
+//             }
+//             else if (tilesCaptured > 0)
+//             {
+//                 score += tilesCaptured;
+//             }
+//         }
+
+//         for (int i = 0; i < enemyCount; i++)
+//             if (grid[a[i].y / ts][a[i].x / ts] == 2)
+//                 Game = false;
+
+//         // Update score GUI text
+//         scoreText.setString("Score: " + to_string(score));
+//         bonusText.setString("Bonus: " + to_string(bonusCount));
+
+//         window.clear();
+
+//         for (int i = 0; i < M; i++)
+//             for (int j = 0; j < N; j++)
+//             {
+//                 if (grid[i][j] == 0)
+//                     continue;
+
+//                 if (grid[i][j] == 1)
+//                     sTile.setTextureRect(IntRect(0, 0, ts, ts));
+//                 if (grid[i][j] == 2)
+//                     sTile.setTextureRect(IntRect(54, 0, ts, ts));
+
+//                 sTile.setPosition(j * ts, i * ts);
+//                 window.draw(sTile);
+//             }
+
+//         sTile.setTextureRect(IntRect(36, 0, ts, ts));
+//         sTile.setPosition(x * ts, y * ts);
+//         window.draw(sTile);
+
+//         sEnemy.rotate(10);
+//         for (int i = 0; i < enemyCount; i++)
+//         {
+//             sEnemy.setPosition(a[i].x, a[i].y);
+//             window.draw(sEnemy);
+//         }
+
+//         window.draw(scoreText);
+//         window.draw(bonusText);
+
+//         if (!Game)
+//             window.draw(sGameover);
+
+//         window.display();
+//     }
+
+// }

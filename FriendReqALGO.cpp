@@ -127,7 +127,10 @@ FriendReqAlgo::FriendReqAlgo(PlayerSys *p, HashingALGO *h) {
 
 void FriendReqAlgo::sendReq(const string &from, const string &to) {
     int toIdx = ht->search(to);
-    if (toIdx == -1) return;
+    if (toIdx == -1){
+        cout << "sendReq failed: target '" << to << "' not found!\n";
+        return;
+    };
 
     // Add request to receiver
     RequestNode *node = new RequestNode(from);
@@ -218,7 +221,9 @@ void FriendReqAlgo::viewRequests(const string &user) {
 // --- Optional helpers for GUI display ---
 string FriendReqAlgo::getFriendsStr(const string &user) {
     int idx = ht->search(user);
-    if(idx==-1) return "User not found.";
+    if(idx==-1){
+        return "User not found.";
+    };
     string res;
     FriendNode *f = ps->players[idx].friendsHead;
     while(f){ res += f->name + "\n"; f=f->next; }
@@ -227,7 +232,11 @@ string FriendReqAlgo::getFriendsStr(const string &user) {
 
 string FriendReqAlgo::getRequestsStr(const string &user) {
     int idx = ht->search(user);
-    if(idx==-1) return "User not found.";
+    if(idx==-1){
+        
+        return "User not found.";
+    } 
+        
     string res;
     RequestNode *r = ps->players[idx].requestsHead;
     while(r){ res += r->name + "\n"; r=r->next; }
