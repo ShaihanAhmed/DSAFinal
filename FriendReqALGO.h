@@ -13,7 +13,8 @@ public:
 
     FriendReqAlgo(PlayerSys *p, HashingALGO *h);
 
-    void sendReq(const string &from, const string &to);
+    // void sendReq(const string &from, const string &to);
+    string sendReq(const string &from, const string &to);
     void acceptReq(const string &user, const string &from);
     void rejectReq(const string &user, const string &from);
     void viewFriends(const string &user);
@@ -21,6 +22,8 @@ public:
 
     string getFriendsStr(const string &user);
     string getRequestsStr(const string &user);
+
+    void debugLoadAllPlayers();
 };
 
 #endif
