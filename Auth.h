@@ -1,6 +1,6 @@
 #ifndef AUTH_H
 #define AUTH_H
-
+#include "leaderboard.h"
 #include <iostream>
 #include <fstream>
 #include <string>

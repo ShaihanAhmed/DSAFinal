@@ -1,6 +1,5 @@
 #ifndef FRIENDREQALGO_H
 #define FRIENDREQALGO_H
-
 #include "PlayerSys.h"
 #include "HashingALGO.h"
 #include <iostream>
