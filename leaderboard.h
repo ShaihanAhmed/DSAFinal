@@ -9,30 +9,37 @@ using namespace std;
 
 const int MAX_USERS = 10;
 
-class User {
+class User
+{
 public:
     int score{};
     string user;
 };
 
-class LeaderBoard {
+class LeaderBoard
+{
 public:
     User topUser[MAX_USERS];
     int heapSize = 0;
 
-    LeaderBoard(int newScore, const string &newUser) {
+    LeaderBoard(int newScore, const string &newUser)
+    {
         readFromFile();
 
         // If there's room, append and rebuild heap
-        if (heapSize < MAX_USERS) {
+        if (heapSize < MAX_USERS)
+        {
             topUser[heapSize].score = newScore;
             topUser[heapSize].user = newUser;
             heapSize++;
             buildMinHeap();
             cout << "------------CONGRATULATIONS! YOU MADE IT IN THE LEADERBOARD! -----------------\n";
-        } else {
+        }
+        else
+        {
             // Full: replace root if newScore is better than smallest (root)
-            if (newScore > topUser[0].score) {
+            if (newScore > topUser[0].score)
+            {
                 cout << "--------CONGRATULATIONS! YOU MADE IT TO THE TOP 10 LEADERBOARD!-------------\n";
                 topUser[0].score = newScore;
                 topUser[0].user = newUser;
@@ -41,28 +48,36 @@ public:
         }
 
         printAndWriteToFile();
-        display();
+        // display();
+        displayGUI();
     }
 
 private:
-    void readFromFile() {
+    void readFromFile()
+    {
         ifstream in("leaderboard.txt");
         heapSize = 0;
         string line;
-        while (heapSize < MAX_USERS && getline(in, line)) {
-            if (line.empty()) continue;
+        while (heapSize < MAX_USERS && getline(in, line))
+        {
+            if (line.empty())
+                continue;
             // find first whitespace separating score and name
             size_t pos = line.find_first_of(" \t");
-            if (pos == string::npos) continue; // invalid line, skip
+            if (pos == string::npos)
+                continue; // invalid line, skip
             // get score substring and name substring (trim leading spaces for name)
             string scoreStr = line.substr(0, pos);
             size_t nameStart = line.find_first_not_of(" \t", pos);
-            if (nameStart == string::npos) nameStart = pos + 1;
+            if (nameStart == string::npos)
+                nameStart = pos + 1;
             string name = line.substr(nameStart);
-            try {
+            try
+            {
                 topUser[heapSize].score = stoi(scoreStr);
             }
-            catch (...) {
+            catch (...)
+            {
                 continue; // skip malformed lines
             }
             topUser[heapSize].user = name;
@@ -71,24 +86,29 @@ private:
         in.close();
 
         // build heap for current entries (so topUser[0] is the smallest)
-        if (heapSize > 0) buildMinHeap();
+        if (heapSize > 0)
+            buildMinHeap();
     }
 
-    void printAndWriteToFile() {
+    void printAndWriteToFile()
+    {
         ofstream out("leaderboard.txt");
-        for (int i = 0; i < heapSize; ++i) {
+        for (int i = 0; i < heapSize; ++i)
+        {
             out << topUser[i].score << " " << topUser[i].user << '\n';
         }
         out.close();
     }
 
     // heap helpers (use heapSize consistently)
-    void buildMinHeap() {
+    void buildMinHeap()
+    {
         for (int i = heapSize / 2 - 1; i >= 0; --i)
             heapifyMin(i);
     }
 
-    void heapifyMin(int i) {
+    void heapifyMin(int i)
+    {
         int smallest = i;
         int left = 2 * i + 1;
         int right = 2 * i + 2;
@@ -98,33 +118,87 @@ private:
         if (right < heapSize && topUser[right].score < topUser[smallest].score)
             smallest = right;
 
-        if (smallest != i) {
+        if (smallest != i)
+        {
             swap(topUser[i], topUser[smallest]);
             heapifyMin(smallest);
         }
     }
     void display()
-{
-    // Copy current leaderboard
-    User temp[MAX_USERS];
-    for (int i = 0; i < heapSize; i++)
-        temp[i] = topUser[i];
+    {
+        // Copy current leaderboard
+        User temp[MAX_USERS];
+        for (int i = 0; i < heapSize; i++)
+            temp[i] = topUser[i];
 
-    // Sort in descending order (highest score first)
-    for (int i = 0; i < heapSize - 1; i++) {
-        for (int j = i + 1; j < heapSize; j++) {
-            if (temp[j].score > temp[i].score) {
-                swap(temp[i], temp[j]);
+        // Sort in descending order (highest score first)
+        for (int i = 0; i < heapSize - 1; i++)
+        {
+            for (int j = i + 1; j < heapSize; j++)
+            {
+                if (temp[j].score > temp[i].score)
+                {
+                    swap(temp[i], temp[j]);
+                }
             }
         }
+
+        // Print leaderboard
+        cout << "\n========== LEADERBOARD (TOP " << heapSize << ") ==========\n";
+        for (int i = 0; i < heapSize; i++)
+        {
+            cout << i + 1 << ". " << temp[i].user << " - " << temp[i].score << "\n";
+        }
+        cout << "=====================================================\n";
     }
 
-    // Print leaderboard
-    cout << "\n========== LEADERBOARD (TOP " << heapSize << ") ==========\n";
-    for (int i = 0; i < heapSize; i++) {
-        cout << i + 1 << ". " << temp[i].user << " - " << temp[i].score << "\n";
+    void displayGUI()
+    {
+        sf::RenderWindow window(sf::VideoMode(600, 600), "Leaderboard");
+
+        sf::Font font;
+        if (!font.loadFromFile("fonts/arial.ttf"))
+        {
+            std::cout << "Font not found!\n";
+            return;
+        }
+
+        // Copy and sort leaderboard (descending)
+        User temp[MAX_USERS];
+        for (int i = 0; i < heapSize; i++)
+            temp[i] = topUser[i];
+        for (int i = 0; i < heapSize - 1; i++)
+            for (int j = i + 1; j < heapSize; j++)
+                if (temp[j].score > temp[i].score)
+                    std::swap(temp[i], temp[j]);
+
+        // Prepare text objects for SFML
+        sf::Text entries[MAX_USERS];
+        for (int i = 0; i < heapSize; i++)
+        {
+            entries[i].setFont(font);
+            entries[i].setCharacterSize(24);
+            entries[i].setFillColor(sf::Color::White);
+            entries[i].setString(
+                std::to_string(i + 1) + ". " + temp[i].user + " - " + std::to_string(temp[i].score));
+            entries[i].setPosition(50, 50 + i * 40); // adjust spacing
+        }
+
+        // Main GUI loop
+        while (window.isOpen())
+        {
+            sf::Event event;
+            while (window.pollEvent(event))
+            {
+                if (event.type == sf::Event::Closed)
+                    window.close();
+            }
+
+            window.clear(sf::Color::Black); // background
+            for (int i = 0; i < heapSize; i++)
+                window.draw(entries[i]);
+            window.display();
+        }
     }
-    cout << "=====================================================\n";
-}
 };
 #endif
